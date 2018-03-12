@@ -1,0 +1,13 @@
+@startuml 图标
+
+
+interface PeerConnectionInterface{
+    StreamCollectionInterface local_streams
+    StreamCollectionInterface remote_streams
+
+    bool AddStream(MediaStreamInterface* stream)
+    void RemoveStream(MediaStreamInterface* stream)
+        
+}
+
+@endUml

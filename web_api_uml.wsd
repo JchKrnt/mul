@@ -1,0 +1,280 @@
+@startuml WebRTC API
+package "api" #ddd{
+class PeerConnectionFactory {
+    +{static} int PUBLIC_CLASS_VARIABLE
+    - rtc::Thread* signaling_thread_;
+    - rtc::Thread* network_thread_;
+    - rtc::Thread* worker_thread_;
+
+    - AudiDeviceModule* default_adm_;
+    - AudioDecoderFactory* audio_decoder_factory_;
+    - ChannelManager channel_manager_;
+   
+    - WebrtcVideoEncoderFactory video_encoder_factory_;
+    - WebrtcVideoDecoderFactory video_decoder_factory_;
+    - BasicNetworkManager default_network_manager_;
+    - BasicPacketSocketFactory default_socket_factory_;
+
+    ~ void createPeerConnection()
+    - webrtc::MediaControllerInterface* CreateMediaController(const cricket::MediaConfig& config) const;
+    - cricket::MediaEngineInterface* PeerConnectionFactory::CreateMediaEngine_w();
+}
+
+
+interface PeerConnectionInterface{
+    StreamCollectionInterface local_streams
+    StreamCollectionInterface remote_streams
+
+    bool AddStream(MediaStreamInterface* stream)
+    void RemoveStream(MediaStreamInterface* stream)
+        
+}
+
+class PeerConnection {
+    +{static} int PUBLIC_CLASS_VARIABLE
+    -PeerConnectionFactory factory_
+    -PeerConnectionObserver* observer_
+    -UMAObserver* uma_observer_
+    -IceState ice_state_;
+    -IceConnectionState ice_connection_state_;
+    -IceGatheringState ice_gethering_state_;
+    -PortAllocator port_allocator_;
+    -MediaControllerInterface media_controller_;
+    -StreamCollection local_streams_;
+    -StreamCollection remote_streams_;
+    -vectory<MediaStreamObserver> stream_observers;
+
+    -WebRtcSession session_;
+    -StatsCollection stats_;
+
+    ~void packagePrivateMethod()
+    #{abstract} char protectedMethod(int param)
+}
+
+class WebRtcSession {
+
+    -rtc::Thread* worker_thread_;
+    -rtc::Thread* signaling_thread_;
+    -TransportController transport_controller_
+    -MediaControllerInterface *media_controller_
+    -VoiceChannel voice_channel_
+    -VideoChannel video_channel_
+    -ChannelManager *channe_manager_ 
+    -IceObserver ice_observer_
+    -IceConnectionState ice_connection_state_
+    -bool ice_connection_receiving_
+    -SessionDescriptionInterface local_desc_
+    -SessionDescriptionInterface remote_desc_
+    -bool older_version_remote_peer_;
+    -bool dtls_enabled_
+    -cricket::DataChannelType data_channel_type_
+    -WebRtcSessionDescriptionFactory webrtc_session_desc_factory_
+    -MetricsObserverInterface* metrics_observer_;
+    -- Declares the bundle policy for the WebRTCSession --
+    -PeerConnectionInterface::BundlePolicy bundle_policy_;
+    -- Declares the RTCP mux policy for the WebRTCSession --
+    -PeerConnectionInterface::RtcpMuxPolicy rtcp_mux_policy_;
+
+    + bool CreateVoiceChannel(const cricket::ContentInfo* content,
+                          const std::string* bundle_transport)
+    + bool CreateVideoChannel(const cricket::ContentInfo* content,
+                          const std::string* bundle_transport)
+    + bool CreateDataChannel(const cricket::ContentInfo* content,
+                         const std::string* bundle_transport)
+
+}
+
+interface MediaControllerInterface{
+    +{static} MediaControllerInterface* Create(
+        MediaConfig config,Thread* worker_thread,cricket::ChannelManager* channel_manager)
+}
+
+class MediaController{
+    - cricket::ChannelManager* const channel_manager_
+    - webrtc::Call::Config call_config_
+    - std::unique_ptr<webrtc::Call> call_
+}
+
+
+class WebRtcSessionDescriptionFactory{
+
+}
+
+interface IceObserver{
+
+}
+
+interface IceConnectionState{
+
+}
+
+interface SessionDescriptionInterface{
+
+}
+
+
+}
+
+package "pc" #ddc{
+
+    class ChannelManager {
+
+        - void Construct(MediaEngineInterface* me,DataEngineInterface* dme,rtc::Thread* worker_thread,rtc::Thread* network_thread)
+
+        + VoiceChannel* CreateVoiceChannel_w(media_controller,transport_controller,content_name,bundle_transport_name,rtcp,options)
+        + void DestroyVoiceChannel_w(VoiceChannel* voice_channel)
+        + VideoChannel* CreateVideoChannel_w(media_controller,transport_controller,content_name,bundle_transport_name,rtcp,options);
+        + void DestroyVideoChannel_w(VideoChannel* video_channel)
+        + DataChannel* CreateDataChannel_w(transport_controller,content_name,bundle_transport_name,rtcp,data_channel_type);
+        + void DestroyDataChannel_w(DataChannel* data_channel);
+
+        - std::unique_ptr<MediaEngineInterface> media_engine_
+        - std::unique_ptr<DataEngineInterface> data_media_engine_
+        - VoiceChannels voice_channels_
+        - VideoChannels video_channels_
+        - DataChannels data_channels_
+    }
+
+    class DataChannel{
+
+    }
+
+    class VoiceChannel{
+
+    }
+
+    class VideoChannel{
+
+    }
+
+    class BaseChannel{
+       - MediaChannel media_channel_
+   }
+}
+
+package "p2p" #dca{
+   class TransportController{
+
+   }
+
+   class ConnectionStatsGetter{
+
+   }
+
+   
+}
+
+package "media" #dcc{
+
+    class MediaEngineFactory{
+
+    }   
+
+    interface MediaEngineInterface{
+        + VoiceMediaChannel* CreateChannel(call,config,options)= 0;
+        + VideoMediaChannel* CreateVideoChannel(call,config,options) = 0;
+        + virtual const std::vector<AudioCodec>& audio_send_codecs() = 0;
+        + virtual const std::vector<AudioCodec>& audio_recv_codecs() = 0;
+        + virtual RtpCapabilities GetAudioCapabilities() = 0;
+        + virtual const std::vector<VideoCodec>& video_codecs() = 0;
+        + virtual RtpCapabilities GetVideoCapabilities() = 0;
+    } 
+
+    class WebRtcMediaEngine2{
+
+    }
+
+    class CompositeMediaEngine{
+        
+        # WebRtcVoiceEngine voice_
+        # WebRtcVideoEngine2 video_
+
+
+    }
+
+    interface DataEngineInterface{
+
+    }
+
+    class WebRtcVoiceEngine{
+        + VoiceMediaChannel* CreateChannel(call,config,options)
+        
+    }
+
+    class WebRtcVideoEngine2{
+        
+    }
+
+    class MediaChannel{
+        - rtc::CriticalSection network_interface_crit_
+        - NetworkInterface network_interface_
+    }
+
+    class VoiceMediaChannel{
+
+    }
+
+    class VideoMediaChannel{
+
+    }
+
+    class DataMediaChannel{
+
+    }
+
+    class MediaChannel::NetworkInterface{
+
+    }
+
+}
+
+namespace webrtc #eee{
+    interface AudioSinkInterface{
+
+    }
+
+    interface TraceCallback{
+
+        + void Print(level, message, length);
+    }
+}
+
+' 关系图
+
+PeerConnectionFactory --> PeerConnectionInterface
+PeerConnectionFactory --> ChannelManager
+PeerConnectionFactory ..> MediaEngineFactory
+PeerConnectionInterface <|-- PeerConnection 
+PeerConnection --> WebRtcSession
+WebRtcSession --> MediaControllerInterface
+WebRtcSession --> ChannelManager
+WebRtcSession --> TransportController
+MediaControllerInterface <|-- MediaController
+MediaChannel::NetworkInterface <|-- BaseChannel
+ConnectionStatsGetter <|-- BaseChannel
+BaseChannel <|-- DataChannel
+BaseChannel <|-- VoiceChannel
+BaseChannel <|-- VideoChannel
+ChannelManager --> DataChannel
+ChannelManager --> VideoChannel
+ChannelManager --> VoiceChannel
+WebRtcSession ..> DataChannel
+WebRtcSession ..> VideoChannel
+MediaChannel <|-- DataMediaChannel
+MediaChannel <|-- VoiceMediaChannel
+MediaChannel <|-- VideoMediaChannel
+ChannelManager ..> MediaEngineInterface
+BaseChannel --> MediaChannel
+MediaChannel --> MediaChannel::NetworkInterface
+
+
+
+MediaEngineFactory ..> WebRtcMediaEngine2
+MediaEngineInterface <|-- CompositeMediaEngine
+CompositeMediaEngine <|.. WebRtcMediaEngine2
+CompositeMediaEngine --> WebRtcVideoEngine2
+CompositeMediaEngine --> WebRtcVoiceEngine
+webrtc.TraceCallback <|-- WebRtcVoiceEngine
+
+
+@endUml
